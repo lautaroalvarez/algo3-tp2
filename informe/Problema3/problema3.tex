@@ -1,0 +1,194 @@
+\subsection{Introducci\'on}
+% Describir detalladamente el problema a resolver dando ejemplos del mismo y sus soluciónes.
+El problema a resolver trata de un grupo de arque\'ologos que desea escapar de una fortaleza. Para esto cuentan con unos carritos con un mapa de la red de v\'ias en la que se encuentran montados. La complejidad de este problema radica en que las estaciones no est\'an todas a la misma distancia entre s\'i. Adem\'as los arque\'ologos quieren escapar lo m\'as r\'apido posible si es que es factible el escape.
+M\'as formalmente, el problema consiste en encontrar el camino m\'inimo (si es que existe) entre el lugar donde se encuentran los arque\'ologos y la salida de la fortaleza. La complejidad temporal pedida es $O(n^2)$. \\
+Ejemplos:
+Dada esta entrada:
+\begin{verbatim}
+6 7
+1 2 4
+1 3 2
+2 3 5
+2 4 10
+3 5 3
+4 6 11
+5 4 4
+\end{verbatim}
+Armamos el siguiete digrafo, y le calculamos el camíno mínimo desde la primera estación a la última. 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.5\textwidth]{Problema3/EjemploPath}
+  \caption{Digrafo con camíno calculado, donde A es la estación 1, B la 2, y así.}
+  \label{fig: ej1_exp1_columnas}
+\end{figure}
+La salida queda:
+\begin{verbatim}
+18
+5
+1 3 5 4 6
+\end{verbatim}
+
+Dónde:
+\begin{itemize}
+\item 18 son los segundos que tarda desde la estación 1 a la 6.
+\item 5 estaciones se recorren de la 1 a la 6.
+\item $"$1 3 5 4 6$"$ es el recorrido mínimo de estaciones desde la 1 a la 6.
+\end{itemize}
+
+\subsection{Resoluci\'on}
+%2. Explicar de forma clara, sencilla, estructurada y concisa, las ideas desarrolladas para la resoluci´on
+%del problema. Para esto se pide utilizar pseudoc´odigo y lenguaje coloquial combinando adecua
+%damente ambas herramientas (¡sin usar c´odigo fuente!). Se debe tambi´en justificar por qu´e el
+%procedimiento desarrollado resuelve efectivamente el problema.
+Para resolver este problema decidimos modelar la red ferroviaria
+con un grafo. Vamos a tomar a cada estaci\'on como un nodo y dados dos nodos $u$ y $v$ existe la arista $(u,v)$ si y s\'olo si existe una v\'ia entre esas dos estaciones.\\
+El problema de camino m\'inimo de un nodo a otro en un grafo es muy conocido y nosotros optamos por hacer el algoritmo de Dijkstra[1]. Este algoritmo se puede utilizar para calcular el camino m\'inimo (y la longitud de \'este) de un nodo a todos los dem\'as. En particular a nosotros tenemos un nodo origen y s\'olo un nodo destino por lo tanto nos fue de mucha utilidad. Tambi\'en es muy importante notar que todos los pesos de las aristas de nuestro grafo tienen peso positivo o cero, si no contáramos con esa hip\'otesis .
+%Podr\'iamos usar elpodr\ no podr\'ara quetilizar esta implem la ci\'on del algoimtmo de Dijkplementaci\'on del algoritmo fuera m\'as sencilla representamos a nustro grafo como un arreglo de nodos donde cada nodo contaba con la siguiente informaci\'on: \\
+Representamos a nuestro grafo como un arreglo de nodos donde cada nodo cuenta con la siguiente informaci\'on: \\
+
+$Nodo: tupla(id: int, \\
+distancia:int, \\
+id\_predecesor: int, \\
+listaVecinos:lista(tupla(id\_vecino,peso\_arista\_hacia\_vecino)))$\\
+
+Es importante aclarar que cada id\_predecesor se inicializa con un valor nulo al igual que la distancia (a excepci\'on del nodo origen que tiene distancia $0$).\\
+Adem\'as copiamos dicho arreglo a una lista auxiliar porque en nuestro algoritmo vamos a necesitar una cola de prioridad relativa a las distancias al nodo inicial. \\
+Reconocemos que en t\'erminos de complejidad temporal hay mejores implementaciones de una cola de prioridad que una lista como por ejemplo un \emph{heap} o un \emph{fibonacci heap} pero optamos por implementarlo con una lista ya que no desborda la complejidad pedida y adem\'as es m\'as sencillo de implementar.\\
+
+\SetKwProg{Fn}{Function}{:}{EndFunction}
+\begin{algorithm}[H]
+	\label{algo: pseudocodigo_ej3_dijsktra}
+	\Fn{Dijkstra(nodos: Arreglo(nodo), cola: colaPrioridad(nodo))}{
+		\BlankLine
+		\While{cola no este vacia}{
+			\BlankLine
+			minimo = extraerMinimo(cola) \\
+			\For{cada vecino de minimo}{
+			    \If{minimo.distancia + peso(arista(minimo,vecino) $<$ vecino.distancia}{
+			        vecino.distancia $\gets$ minimo.distancia + peso(arista(minimo,vecino)
+			    }
+			}
+		}
+		\BlankLine
+	}
+	\caption{Algoritmo de Dijkstra}
+\end{algorithm}
+
+Por \'ultimo para imprimir la salida de nuestro programa nos situamos en el nodo destino e iteramos hasta llegar al nodo origen pasando por los nodos que se hayan tenido que recorrer para que el camino tenga peso m\'inimo.
+
+\subsection{Cota de Complejidad}
+%3. Deducir una cota de complejidad temporal del algoritmo propuesto (en funci´on de los par´ametros
+%que se consideren correctos) y justificar por qu´e el algoritmo desarrollado para la resoluci´on del
+%problema cumple la cota dada. Utilizar el modelo uniforme salvo que se explicite lo contrario.
+Veamos cada paso. Al principio, cuando tomamos la cantidad de estaciones, generamos un arreglo de longitud $n$, lo que nos cuesta $O(n)$. Luego, tomamos el resto de la entrada, es decir la cantidad de v\'ias y su informaci\'on s\'olo actualizamos la lista de vecinos del nodo correspondiente por lo tanto nos cuesta $O(m)$. Notar que $O(m) \subseteq O(n^2)$ ya que a lo sumo hay $n*(n-1)$ aristas. En total tomar la entrada nos cuesta $O(n^2)$. \\
+La parte principal de nuestro algoritmo cuesta $O(n^2)$. Comencemos por el cuerpo principal del ciclo. \\
+En la l\'inea 3 del algoritmo 3 extraemos el m\'inimo de una lista (estamos forzados a recorrer toda la lista y luego remover, por lo tanto eso cuesta $O(n)$) y luego tenemos que iterar cada vecino de dicho nodo ($O(n)$) para ver si es necesario relajar la arista o no. Revisar eso cuesta $O(1)$ porque se hacen dos sumas, una comparaci\'on y una asignaci\'on. Por ende el cuerpo del ciclo cuesta $O(n)$ \\
+Dado que en cada iteraci\'on se remueve exactamente un elemento de la lista de nodos que no se defini\'o su distancia a\'un el ciclo principal se ejecuta $n$ veces por lo cual es $O(n^2)$.\\
+Por \'ultimo para imprimir la salida partimos del nodo destino e iteramos hasta el nodo origen. Como es un camino m\'inimo es simple y por ende pasa a lo sumo una vez por cada nodo, por lo tanto imprimir la salida cuesta $O(n)$. \\
+La cota de complejidad de nuestro algoritmo es $O(n^2)$, con $n$ la cantidad de nodos del grafo, o lo que es lo mismo, la cantidad de estaciones.
+Nuestro algoritmo cumple con la complejidad temporal pedida ya que $n^2 <n^2 log^2(n)$
+
+\subsection{Experimentaci\'on}
+
+En este grafico podemos observar que se cumple la complejidad te\'orica calculada en la secci\'on anterior.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{Problema3/salida}
+  \caption{Caso aleatorio variando la cantidad de nodos}
+  \label{fig: ej1_exp1_columnas}
+\end{figure}
+En esta figura podemos observar que si se fija un nodo la cantidad de aristas perjudica ligeramente la constante de la complejidad ya que los datos mostrados en el gr\'afico se pueden aproximar por un funci\'on lineal. De todos modos esto no quiere decir que la complejidad en peor caso sea diferente, recordemos que en cualquier digrafo $m<n*(n-1)$. Para este experimento decidimos fijar la cantidad de nodos a 90.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{Problema3/salida2}
+  \caption{Variando la cantidad de aristas y fijando 90 nodos}
+  \label{fig: ej1_exp1_columnas}
+\end{figure}
+
+En los experimentos anteriores usamos un peso aleatorio de las aristas ya que no afecta la complejidad. \\
+Por los resultados del gr\'afico anterior pensamos que podr\'iamos encontrar algunos peores o mejores casos. Suponemos que aumentando la cantidad de aristas se genera un peor caso y disminuy\'endola un mejor caso. Consideramos que el grado de cada nodo influye en el tiempo de ejecuci\'on.
+\newpage
+\begin{itemize}
+	\item Peor caso: \\
+	Digrafo completo
+	\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{Problema3/salida3}
+  \caption{Digrafos completos}
+  \label{fig: ej1_exp1_columnas}
+\end{figure}
+	El grafico muestra que la complejidad se cumple pero con una constante de 2. 
+	\item Mejor caso: \\ 
+	\'Arboles y caminos. Sabemos que los caminos en particular son \'arboles pero queremos tomar aparte el caso en el que el grado de cada nodo es a lo sumo dos.
+	\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{Problema3/salida4}
+  \caption{Corrida con arboles y caminos de misma cantidad de nodos}
+  \label{fig: ej1_exp1_columnas}
+\end{figure}
+	En este grafico no hubo grandes diferencias en cuanto al tiempo de ejecuci\'on, esto puede deberse a que la cantidad de aristas es la misma y la disposici\'on en el grafo no influya en el tiempo de ejecuci\'on.
+\end{itemize}
+
+Ambos gr\'aficos muestran que nuestra hip\'otesis fue verificada. En digrafo completo se comporta mejor que con un \'arbol \\
+
+El problema ped\'ia el camino m\'inimo de cierto nodo a otro y el algoritmo de Dijkstra sirve para saber el camino m\'inimo desde un nodo origen a todos los dem\'as. Por esta raz\'on se nos ocurri\'o que pod\'iamos cambiar ligeramente nuestro algoritmo para que s\'olo calcule la longitud del camino m\'inimo hasta el nodo destino sin importar si se hab\'ia computado la distancia al resto de los nodos. En la prueba de correctitud de Dijkstra [1]
+el invariante indica que cuando se extrajo de la cola de prioridad un nodo $n$ la distancia calculada desde el origen hasta el nodo $n$ en esa iteraci\'on es la longitud m\'inima definitiva.\\
+Para que nuestro algoritmo deje de ejecutar cuando se comput\'o $d(origen,destino)$ agregamos una variable booleana global llamada \"esta\".\\
+\begin{equation*}
+    esta \leftrightarrow destino \in cola
+\end{equation*}
+
+\SetKwProg{Fn}{Function}{:}{EndFunction}
+\begin{algorithm}[H]
+	\label{algo: pseudocodigo_ej3_dijsktra}
+	\Fn{Dijkstra(nodos: Arreglo(nodo), cola: colaPrioridad(nodo))}{
+		\BlankLine
+		\While{cola no este vacia y esta}{
+			\BlankLine
+			minimo = extraerMinimo(cola) \\
+			\For{cada vecino de minimo}{
+			    \If{minimo.distancia + peso(arista(minimo,vecino) $<$ vecino.distancia}{
+			        vecino.distancia $\gets$ minimo.distancia + peso(arista(minimo,vecino)
+			    }
+			}
+		}
+		\BlankLine
+	}
+	\caption{Algoritmo de Dijkstra modificado}
+\end{algorithm}
+
+La variable booleana se puede actualizar en $O(1)$ dentro de la funci\'on extraerMinimo (sencillamente se verifica si se esta extrayendo destino o no).\\
+Es f\'acil ver que el invariante que indica que todos los nodos que no est\'an en la cola tienen la distancia definitiva se sigue cumpliendo. Pero al invariante habr\'ia que agregarle que el nodo destino est\'a en la cola. Al terminar el ciclo tendremos las distancias de los nodos cuya distancia al origen sea menor que destino. \newpage
+
+Veamos los resultados obtenidos:
+\begin{itemize}
+    \item Caso promedio:\\
+    En este caso pusimos la mitad de las aristas posibles y un peso aleatorio.
+    \begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{Problema3/salida5}
+  
+  \label{fig: ej1_exp1_columnas}
+\end{figure}
+    \item Caso grafo completo:\\
+    En este caso tuvimos que tomar dos casos para que pasara por muchos nodos o por pocos, es decir que haya muchas o pocas aristas livianas hacia el destino. Para que el experimento no genere \emph{outliers} decidimos que desde el nodo origen no hay una arista liviana hacia el destino.
+    \begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{Problema3/salida6}
+
+  \label{fig: ej1_exp1_columnas}
+\end{figure}
+    En este caso vemos que no hay una diferencia significativa entre ambos casos lo cual quiere decir que no hay tanta diferencia en la cantidad de nodos visitados entre ambos casos. Adem\'as vemos que hay un crecimiento a medida que la cantidad de nodos aumenta, la causa de este comportamiento debe ser que al ser un grafo completo se tarda bastante en construirse, no que se recorren m\'as nodos hasta llegar al nodo final.
+    \item Caso grafo no conexo:\\
+    En particular vamos a hacer que el nodo destino no est\'e en la misma componente conexa que el origen, de esta forma el programa debiera tener una ejecuci\'on similar al algoritmo de uno a muchos. La cantidad de aristas es aleatoria.
+    \begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth]{Problema3/salida7}
+  
+  \label{fig: ej1_exp1_columnas}
+\end{figure}
+    En este caso vemos que no se mejor\'aron los resultados del primer gr\'afico de este ejercicio.
+\end{itemize}
+
+En resumen, este cambio en el c\'odigo result\'o ser una mejora en la constante de la complejidad pero no en notaci\'on O grande.
+

@@ -1,0 +1,220 @@
+\subsection{Introducción}
+
+\par El problema se basa en determinar cuántos casilleros de un laberinto debemos recorrer para llegar de un punto de partida a un punto de llegada.
+\par En el laberinto podemos encontrarnos con paredes. Por suerte, contamos con un mapa que nos determina (según casilleros ordenados por filas y columnas) en qué posición se encuentran estas paredes. Las paredes pueden romperce, pero con un cierto esfuerzo agregado. Por eso, se determina previamente una cantidad de paredes máxima que se pueden romper en el camino.
+
+\begin{table}[h]
+	\centering
+	\begin{tabular}{|>{\centering\arraybackslash}p{0.5cm}|>{\centering\arraybackslash}p{0.5cm}|>{\centering\arraybackslash}p{0.5cm}|>{\centering\arraybackslash}p{0.5cm}|>{\centering\arraybackslash}p{0.5cm}|}
+		\hline
+		\cellcolor{gray} & \cellcolor{gray} & \cellcolor{gray} & \cellcolor{gray} & \cellcolor{gray} \\ \hline
+		\cellcolor{gray} & P & \cellcolor{gray} & L & \cellcolor{gray} \\ \hline
+		\cellcolor{gray} &  &  &  & \cellcolor{gray} \\ \hline
+		\cellcolor{gray} & \cellcolor{gray} & \cellcolor{gray} & \cellcolor{gray} & \cellcolor{gray} \\
+		\hline
+	\end{tabular}
+	\caption{Laberinto de ejemplo.}
+	\label{fig: ejemplo_laberinto}
+\end{table}
+
+\par Veamos un ejemplo de un problema. Tomemos el laberinto ejemplificado en el cuadro \ref{fig: ejemplo_laberinto}. Debemos calcular el camino mínimo desde el casillero P (punto de partida) al casillero L (punto de llegada). Supongamos que como máxima cantidad de paredes que se pueden romper nos dan el valor 1.
+\par A simple vista podemos ver que el camino mas corto va a ser siguiendo en linea recta desde el casillero P al casillero L, rompiendo una pared en el casillero del medio (ver cuadro \ref{fig: ejemplo_laberinto_resuleto}). Entonces, el resultado final obtenido será 3, ya que hay que pasar por 3 casilleros para llegar de P a L rompiendo a lo sumo una pared.
+
+\begin{table}[h]
+	\centering
+	\begin{tabular}{|>{\centering\arraybackslash}p{0.5cm}|>{\centering\arraybackslash}p{0.5cm}|>{\centering\arraybackslash}p{0.5cm}|>{\centering\arraybackslash}p{0.5cm}|>{\centering\arraybackslash}p{0.5cm}|}
+		\hline
+		\cellcolor{gray} & \cellcolor{gray} & \cellcolor{gray} & \cellcolor{gray} & \cellcolor{gray} \\ \hline
+		\cellcolor{gray} & \cellcolor{green}P & \cellcolor{green} & \cellcolor{green}L & \cellcolor{gray} \\ \hline
+		\cellcolor{gray} &  &  &  & \cellcolor{gray} \\ \hline
+		\cellcolor{gray} & \cellcolor{gray} & \cellcolor{gray} & \cellcolor{gray} & \cellcolor{gray} \\
+		\hline
+	\end{tabular}
+	\caption{Laberinto de ejemplo con el camino mínimo marcado.}
+	\label{fig: ejemplo_laberinto_resuleto}
+\end{table}
+
+\subsection{Idea general de resolución}
+
+\par Vamos a modelar el problema de forma tal que nos quede un grafo, donde cada nodo se corresponda a un casillero del laberinto con una cantidad de paredes rotas en el camino desde el punto de partida hasta él. Luego, calcularemos el camino mínimo entre el nodo correspondiente al punto de partida y los nodos correspondientes al punto de llegada (con sus diferente cantidad de paredes rotas). Este es un problema conocido en grafos, por eso nos sirve modelar el problema de esta forma. Calcularemos las distancias entre el nodo correspondiente al punto de partida y el resto de los nodos por medio de un algoritmo conocido como BFS (Breadth First Search) y luego veremos entre los nodos correspondientes al punto de llegada cuál es el valor mínimo.
+
+\par Tomemos el ejemplo utilizado en la introducción (ver cuadro \ref{fig: ejemplo_laberinto}) y veamos mas en detalle el funcionamiento del algoritmo. El algoritmo toma cada casillero y crea un nodo correspondiente a este casillero por cada cantidad de paredes rotas posibles. Como determinamos que el máximo de paredes a romper era 1, habrá, para cada casillero, un nodo con cantidad de paredes igual a 0 y otro con cantidad de paredes igual a 1. Vale aclarar que esto es porque en ningún casillero podríamos llegar con cantidad de paredes rotas mayor a 1, ya que es el valor máximo que estamos dispuestos a romper.
+
+\par Luego, por cada nodo se crea un enlace a los nodos de las instancias a las cuales puede llegar desde esa posición y esa cantidad de paredes. En la figura \ref{fig: ejemplo_grafo_inicial} podemos ver una representación del grafo resultante. Podemos notar que al pasar de un casillero a uno en el cual hay una pared se hace un salto a la instancia con una pared mas, mientras que en el resto de los casos se mantiene en la misma cantidad de paredes.
+
+\begin{figure}[h]
+	\begin{center}
+		\includegraphics[width=0.7\textwidth]{Problema1/img/ejemplo_grafo_inicial.png}
+		\caption{Grafo resultado de modelar el ejemplo.}
+		\label{fig: ejemplo_grafo_inicial}
+	\end{center}
+\end{figure}
+
+\par Luego, se aplica una implementación básica del algoritmo de BFS y así se consiguen las distancias de los caminos desde el punto de partida hacia el resto de los nodos.
+
+\par Al finalizar el cálculo de las distancias, se toma el mínimo de las distancias a los nodos correspondientes al punto de llegada. Este valor obtenido es la solución del prolema planteado.
+
+\subsection{Presentación del algoritmo y análisis de complejidad}
+
+\par El primer paso del algoritmo se encarga de tomar la entrada y modelarla formando un grafo con las características que ya mencionamos.
+
+\SetKwProg{Fn}{Function}{:}{EndFunction}
+\begin{algorithm}[H]
+	\label{algo: pseudocodigo_ej1_modelado}
+	\Fn{Modelado(G: grilla del mapa, F: \#filas, C: \#columnas, P: máxima cantidad de paredes a romper)}{
+		\BlankLine
+		\For{Para cada casillero en G}{
+			Crea los P+1 nodos (uno por cada cantidad de paredes rotas)\\
+			\BlankLine
+			\For{Para cada casillero vecino de la izquierda o arriba}{
+				\For{Para i $\gets$ 0 hasta P}{
+					\If{Vecino es pared}{
+						Crea una arista que sale del casillero actual con P paredes al vecino con P+1 paredes (si existe)\\
+						\BlankLine
+						Crea una arista que sale del vecino con P-1 paredes (si existe) al casillero actual con P paredes\\
+					}\Else{
+						Crea una arista que sale del casillero actual con P paredes al vecino con P paredes\\
+						\BlankLine
+						Crea una arista que sale del vecino con P paredes al casillero actual con P paredes\\
+					}
+					\BlankLine
+				}
+			}
+		}
+		\BlankLine
+	}
+	\caption{Función encargada de crear el grafo del problema modelado.}
+\end{algorithm}
+
+\par Luego, aplica al grafo un algoritmo de BFS. A continuación explicaremos su funcionamiento, pero primero daremos un pseudocódigo para facilitar su comprensión.
+
+\medskip
+
+\SetAlgoLined
+\SetKwProg{Fn}{Function}{:}{EndFunction}
+\begin{algorithm}[H]
+	\label{algo: pseudocodigo_ej1_bfs}
+	\Fn{BFS(G: grafo, O: nodo de origen, L: nodos de llegada)}{
+		\BlankLine
+		$distanciaVertices[1..cantNodos(G)] \gets \infty$\\
+		$distanciaVertices[O] \gets 0$\\
+		\BlankLine
+		Agrego el nodo O a la cola de nodosARevisar\\
+		\BlankLine
+		\For{Mientras haya nodos en la cola nodosARevisar}{
+			Saco el primer nodo de la cola nodosARevisar y lo guardo en nodoActual\\
+			\BlankLine
+			\For{Para cada vecino(nodoActual)}{
+				\If{distanciaVertices[vecinoActual] == $\infty$}{
+					$distanciaVertices[vecinoActual] \gets distanciaVertices[nodoActual] + 1$\\
+					Agrego vecinoActual a la cola nodosARevisar
+				}
+			}
+		}
+		\BlankLine
+		\Return{mínimo\{Distancia de los nodos L\}}
+		\BlankLine
+	}
+	\caption{Función encargada de calcular los caminos mínimos desde el nodo inicial hacia todos los nodos.}
+\end{algorithm}
+
+\medskip
+
+\par Analicemos la complejidad temporal del algoritmo \ref{algo: pseudocodigo_ej2_bfs}. Definimos n=\textit{\#Nodos del grafo}. Utilizaremos una lista para guardar los nodos, y por cada nodos se guarda una lista de los índices de los vecinos. Acceder a un nodo nos cuesta O(1), recorrer todos los nodos nos cuesta O(n), recorrer los vecinos de un nodo nos cuesta O(\textit{\#vecinos}). Veamos a continuación en detalle la complejidad del algoritmo basándonos en el pseudocódigo \ref{algo: pseudocodigo_ej2_bfs}.
+
+\begin{itemize}
+	\item En la linea 2 se inicializa un arreglo de n posiciones, lo que nos toma O(n).
+	\item En la linea 4 se agrega el nodo a la cola en O(1).
+	\item En la linea 5 comienza un ciclo que se ejecuta mientras haya nodos en la cola. Para acotar la cantidad de ciclos tenemos que tener en cuenta que pueden agregarse todos los nodos a la cola, pero ninguno puede agregarse mas de una vez. Por lo que el ciclo se ejecuta a lo sumo n veces.
+	\item En la linea 6 se saca el primer nodo de la lista en O(1) * n veces = O(n)
+	\item En la linea 7 se ejecuta un ciclo para cada vecino del nodo actual. Un nodo puede tener a lo sumo m-1 vecinos (si tiene un enlace apuntando a cada nodo del grafo). Si tenemos en cuenta las características del grafo que se forma luego de modelar el problema podemos asegurar que un nodo tendrá siempre menos de 4 vecinos. Por lo que podemos acotar este ciclo por O(4) * n veces = O(n).
+	\item En la linea 14 se calcula el mínimo, que surje de recorrer los nodos correspondientes al punto de llegada. Hay un nodo por cada número de paredes rotas. Por lo que es O(máximo de paredes).
+\end{itemize}
+
+\par Si tenemos en cuenta que habrá un nodo por cada casillero (filas * columnas) y por cada cantidad de paredes rotas (máximo de paredes), la cantidad de nodos del grafo n = filas * columnas * máximo de paredes. Por lo que si tomamos F=\textit{\#Filas del mapa}, C=\textit{\#Columnas del mapa}, P=\textit{\#Máxima de paredes que se pueden romper} nos queda que la complejidad del algoritmo BFS implementado es O(F*C*P).
+
+\par Para armar el grafo, se recorre cada fila y cada columna y se crea un nodo por cada cantidad de paredes rotas, por lo que también obtenemos una complejidad temporal O(F*C*P). En fin, el algoritmo tiene una complejidad temporal \textbf{O(F*C*P)}.
+
+\subsection{Análisis de correctitud}
+
+\par Analicemos la solución que ofrece el algoritmo y veamos por qué resuelve el problema planteado anteriormente. La parte mas importante es el modelado del problema:
+
+\begin{itemize}
+	\item Construímos un grafo que tiene como nodo un casillero y una cantidad de paredes rotas hasta el momento.
+	\item Unimos los nodos (casilleros) con aristas dirigidas únicamente a los casilleros vecinos a los cuales podemos acceder. Además, en el caso de que un vecino sea una pared no generamos una arista dirigida a ese vecino con la misma cantidad de paredes, sino con una pared mas. Y si no existe un nodo con esa cantidad de paredes no generamos un arista, por lo que nunca se llega a una instancia inválida (con mas paredes rotas de lo permitido).
+	\item Partimos del nodo correspondiente al casillero de punto de partida sin paredes rotas.
+	\item Nuestro destino es cualquiera de los nodos correspondientes al casillero de punto de llegada.
+	\item Todas las aristas del grafo tienen peso 1, ya que es el valor de pasar 1 casillero (y no pueden pasarse mas).
+\end{itemize}
+
+\par Teniendo en cuenta los puntos marcados, si calculamos el camino de peso mínimo entre el nodo de partida y los nodos de llegada vamos a tener la cantidad de casilleros que se deben recorrer para llegar al punto de llegada. Por lo tanto tenemos que calcular camino mínimo en un grafo de un nodo a varios nodos. Para esto aplicamos un algoritmo llamado BFS (Breadth First Search) que parte de un nodo y va expandiendo hacia sus vecinos y calculando los mínimos caminos a todos los nodos del grafo. Al finalizar este algoritmo, tomamos el mínimo valor entre los pesos de los caminos que terminan en los nodos de llegada (teniendo en cuenta que algunos nodos pueden ser inaccesibles) y esta será nuestra solución.
+
+\subsection{Experimentación}
+
+\par A continuación vamos a correr el programa con entradas de diversos tipos y tamaños y analizaremos sus resultados en cuanto a tiempos de ejecución.
+
+\subsubsection{Experimento 1: Cantidad de filas vs Tiempo de ejeución}
+
+\par En este experimento vamos a ir variando la cantidad de filas en los mapas de entrada y compararemos los tiempos de ejecución con la función complejidad planteada. Lo primero que haremos es generar valores de entrada que tengan siempre la misma cantidad de columnas (C=7) y el mismo máximo de paredes que se pueden romper (P = 100), pero haremos que la cantidad de filas vaya desde 3 hasta 900. Podriamos tomar valores incluso mas altos, pero creemos que con las cantidades nos será suficiente para observar en un gráfico la forma de la función de complejidad y compararla con la planteada anteriormente.
+
+\par Como la función de complejidad es del orden O(F*C*P) y vamos a fijar los valores C (cantidad columnas) y P (máxima cantidad de paredes que se pueden romper), esperamos que el gráfico resultante muestre un orden lineal.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{Problema1/img/exp1_filas.png}
+	\caption{Resultados del experimento 1.}
+	\label{fig: ej1_exp1_filas}
+\end{figure}
+
+\par En la figura \ref{fig: ej1_exp1_filas} podemos observar el resultado de correr el programa sobre diversos mapas variando la cantidad de filas. Diferenciamos dos tipos de mapas: sin paredes; o con cantidad de paredes variada y al azar. Se hizo esta diferenciación para observar que no haya influencia de la cantidad de paredes en la entrada. Además, en cada gráficos se incluyeron una función de orden lineal y una de orden cuadrático para facilitar la comparación.
+
+\par Podemos decir que obtuvimos los resultado esperados. Los tiempos de ejecución fueron aumentando en un orden lineal, muy por debajo del orden cuadrático.
+
+
+\subsubsection{Experimento 2: Cantidad de columnas vs Tiempo de ejeución}
+
+\par En este experimento vamos a variar la cantidad de columnas de los mapas en la entrada y analizaremos los tiempos de ejecución obtenidos. Vamos a fijar la cantidad de filas (F = 7) y la cantidad máxima de paredes que se pueden romper (P = 100). Comenzaremos con una cantidad de columnas igual a 0 y la iremos aumentando hasta llegar a 900.
+
+\par Análogamente al experimento anterior, al haber fijado C y P esperamos que el crecimiento del tiempo de ejecución sea lineal.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{Problema1/img/exp2_columnas.png}
+	\caption{Resultados del experimento 2.}
+	\label{fig: ej1_exp2_columnas}
+\end{figure}
+
+\par En la figura \ref{fig: ej1_exp2_columnas} podemos observar los resultados del experimento. Al igual que en el experimento 1 diferenciamos los casos de mapas sin paredes y los casos de mapas con una cantidad aleatroia de paredes. También se incluyeron dos funciones: una de orden lineal y otra de orden cuadrático para facilitar la comparación.
+
+\par Los tiempos de ejecución se mantuvieron en un orden lineal con respecto a la cantidad de columnas.
+
+\subsubsection{Experimento 3: Máximo de paredes que se pueden romper vs Tiempo de ejeución}
+
+\par En este experimento vamos a variar la máxima cantidad de paredes que se pueden romper (parámetro de entrada) y veremos cómo influye esto en el tiempo de ejecución del programa. Generamos un mapa de entrada con un tamaño fijo (20 filas y 20 columnas) y seteamos el parámetro P (máxima cantidad de paredes que se pueden romper) en 1. Luego iremos aumentando el parámetro P hasta llegar a 110.
+
+\par Esperamos que el tiempo de ejecución tenga una relación lineal con respecto a el parámetro P. Esto se debe a que la complejidad planteada de este algoritmo es de orden O(F*C*P), y al fijar F y C como constantes el algoritmo queda con orden O(P).
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{Problema1/img/exp3_paredes.png}
+	\caption{Resultados del experimento 3.}
+	\label{fig: ej1_exp3_paredes}
+\end{figure}
+
+\par Podemos observar en la figura \ref{fig: ej1_exp3_paredes} los resultados del experimento. Al igual que en los experimentos anteriores diferenciamos los casos de mapas sin paredes y los casos de mapas con una cantidad variada de paredes. Podemos ver que los tiempos obtenidos mantienen una relación lineal con respecto al parámetro de entrada P.
+
+
+
+%\begin{figure}
+%	\centering
+%	\begin{subfigure}[b]{0.45\textwidth}
+%		\includegraphics[width=\textwidth]{Problema1/img/exp1_filas.png}
+%		\caption{Mapas sin paredes.}
+%		\label{fig: exp1_filas}
+%	\end{subfigure}
+%	\begin{subfigure}[b]{0.45\textwidth}
+%		\includegraphics[width=\textwidth]{Problema1/img/exp1_filas_variadas.png}
+%		\caption{Mapas con cantidad y ubicación de paredes random.}
+%		\label{fig: exp1_filas_variadas}
+%	\end{subfigure}
+%\end{figure}

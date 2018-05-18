@@ -1,0 +1,313 @@
+\subsection{Introducci\'on}
+% Describir detalladamente el problema a resolver dando ejemplos del mismo y sus soluciónes.
+
+En este ejercicio se nos pide hallar la menor cantidad de esfuerzo que tienen que hacer para llegar a todas las salas donde se encuentran partes de un manuscrito.
+Dicho esfuerzo esta relacionado al costo de romper paredes que conectan con estas salas desde otras salas. Se sabe ademas que hay paredes irrompibles, no se puede recorrer dos salas en diagonal y que dos paredes adyacentes seran indestructibles.
+
+\subsection{Idea General de Resoluci\'on}
+%2. Explicar de forma clara, sencilla, estructurada y concisa, las ideas desarrolladas para la resoluci´on
+%del problema. Para esto se pide utilizar pseudoc´odigo y lenguaje coloquial combinando adecua
+%damente ambas herramientas (¡sin usar c´odigo fuente!). Se debe tambi´en justificar por qu´e el
+%procedimiento desarrollado resuelve efectivamente el problema.
+
+La idea general de la resolucion se basa fuertemente en el algoritmo de Kruskal para encontrar en un grafo sin aristas de peso negativos un árbol generador mínimo, o componentes conexas del grafo. Para ello, necesitamos armarnos el grafo que modele nuestro problema, la forma que encontramos de hacerlo fue unir aquellas salas que no tiene paredes entre si
+como aristas con peso 0, y donde tenemos paredes, nos creamos aristas que unan las salas divididas por paredes con peso igual al esfuerzo que lleva romper dicha pared, entonces  utilizamos las salas como los vértices del grafo, las paredes como las aristas y el costo en términos de esfuerzo de romper una pared
+como el peso de las aristas. Además sabiendo que dos quedan unicamente conectadas si existe una pared que se pueda destruir entre ellas, es decir (como dice el enunciado ) que solo no quedaran conectadas salas que sean adyacentes a múltiples paredes rompibles adyacentes, podemos modelar mejor nuestra idea de que cada arista tiene su vértices como salas y el peso como costo de romper la pared que la une, ya que no puede existir una pared que una a mas de dos salas.
+
+Entonces con el grafo armado y aplicando este algoritmo vamos obteniendo cada arista de peso mínimo que no forme un ciclo en el grafo, lo de no formar un ciclo tiene sentido 
+ya que no vamos a querer volver a algúna sala si este ya fue visitado (no tiene importancia para la solución mientras no rompamos paredes de mas), sumamos el peso de cada una de estas aristas y este sera el resultado del esfuerzo minimo. 
+
+Para la realización de este algoritmo se nos pedia una complejidad de O(F*C*log(F*C)) el cual se adapta muy bien al algoritmo de kruskal, pero con una 
+salvedad, para lograr esta complejidad necesitabamos hacer uso de lo que vimos en clase como "disjoinset", esta estructura de datos, nos permite tener 
+conjuntos disjuntos que se caracatericen por algo en común, en nuestro caso eso en común es una componente conexa.
+
+Como este algoritmo va buscando las aristas de peso mínimo y guardándosela como parte de la solución, necesitamos saber si lo que estamos guardando 
+como válido ya es una arista de una misma componente( en este caso la que estamos agregando) porque no queremos ciclos, ya que es un árbol. Entonces 
+utilizando como representante de cada subconjunto la componente donde pertenecen, es mas fácil a medida que vamos obteniendo las aristas de peso 
+minimo checkear si pertenece o no a la misma componente que estamos construyendo.
+
+Una vez finalizado este proceso, chequeamos si lo que tenemos es conexo o no. Para esto recorremos en el  \emph{Disjointset} y nos fijamos cuáles son los padres de cada vértice. El grafo es conexo sí y sólo sí todos los vertices tienen el mismo padre. En el caso de que no sea conexo devolvemos -1, es decir, empezando de un punto hay salas a las que no se pueden acceder. En otro caso todas las salas son accesibles desde alguna, y el peso del árbol nos da el costo de acceder a ellas.
+
+
+\newpage A continuacion vamos a mostrar un tipo de entrada para graficar como es el armado de nuestro grafo.
+\begin{verbatim}
+6 9
+
+#########
+#...1.#.#
+#...#.#.#
+#...11..#
+#..#.#..#
+#########
+\end{verbatim}
+
+Para los primeros puntos, armamos aristas donde los vertices son cada uno de los ''.'' y el peso de estas aristas es 0, ya que no hay paredes que las separen/unan, cuando nos encontramos con algún número el trato es un poco distinto, armamos las aristas con los vértices que rodean a dicho número y el peso de esa arista es ese número, es decir, el costo de romper esa pared, en este caso usamos que las paredes no van a poder tener mas de 2 adyacentes ni menos de dos, haciendo que no haya una pared sola redeada de salas, siempre se va a poder unir dos salas por una unica pared. Para ejemplicar un poco esto, en la linea número 4, tenemos dos paredes con 1s, en este caso, como el enunciado nos aclara que ''no quedan dos salas conectadas si se rompen dos paredes adyacentes'' entonces las salas que quedan conectadas al romper el primero leyendo de izquierda a derecha son, la que esta a la izquierda del 1 y abajo, para la otra pared las salas que une son la de arriba y la de su derecha. Sabiendo esto, podemos armarnos nuestro grafo sin problemas ya que cada sala va a estar conectada a lo sumo por una sola pared, haciendo asi que el modelado de aristas se pueda realizar sin problemas. 
+
+ 
+\subsubsection{Justificaci\'on}
+
+Como el problema se trata de encontrar el costo minimo de acceder a todas las salas (costo en terminos de paredes rotas) de la grilla, nos da la pauta de que podemos modelar la grilla como un grafo, en donde las salas son los vertices y aquellas salas donde hay paredes que las separan, los pesos de las aristas que unen esas salas.
+Ademas tambien es importante ver que no tiene que tener ciclos, ya que no queremos romper la misma pared dos veces o pasar por la misma sala dos veces si ya la pasamos una vez.
+
+\subsection{Cota de Complejidad}
+%3. Deducir una cota de complejidad temporal del algoritmo propuesto (en funci´on de los par´ametros
+%que se consideren correctos) y justificar por qu´e el algoritmo desarrollado para la resoluci´on del
+%problema cumple la cota dada. Utilizar el modelo uniforme salvo que se explicite lo contrario.
+
+%\begin{algorithm}
+%\begin{algorithmic}[1]\parskip=1mm
+%\caption{\textbf{Lista(enemigo)} Genkidama(\textbf{int} $N$, \textbf{Lista(enemigo)} $matar$, \textbf{int} $T$)}
+%
+%\id \textbf{Lista(enemigo)} res $\leftarrow$ $NuevaLista(enemigo)$ 
+%\id \textbf{enemigo} techo $\leftarrow$ $matar.primero$ 
+%\id \textbf{enemigo} Genki $\leftarrow$ $techo$ 
+%
+%\While{No sea vacia matar y mientras la genkidama mate al de mayor x} 
+%  \id Genki $\leftarrow$ $matar.primero$ 
+%  \id $matar.removePrimero$
+%\EndWhile
+%\id res.agregar(Genki);
+%
+%\While{No sea vacia matar y mientras la genkidama mate al que estoy mirando} 
+%  \id $matar.removePrimero$
+%\EndWhile
+%
+% \id res.agregar(recursion($N$,$matar$,$T$))
+%
+%\Return res
+%
+%\end{algorithmic}
+%\end{algorithm}
+
+La complejidad del algoritmo es del orden  $O(F*C*log_2(F*C))$
+
+\subsubsection{Justificaci\'on}
+
+Como mencionamos anteriormente, utilizamos el algoritmo de kruskal cuyo pseudocódigo es el siguiente:
+
+\begin{verbatim}
+ function Kruskal(G)
+   Para cada v en V[G] hacer
+     Nuevo conjunto C(v) <- {v}.
+   Nuevo heap Q que contiene todas las aristas de G, ordenando por su peso.
+   Defino un árbol T <- Ø     
+   // n es el número total de vértices
+   Mientras T tenga menos de n-1 vertices hacer
+     (u,v) <- Q.sacarMin()
+     // previene ciclos en T.
+     // agrega (u,v) si u y v est\'an diferentes componentes en el conjunto. 
+     // Nótese que C(u) devuelve la componente a la que pertenece u.
+     if C(v) != C(u) then
+       Agregar arista (v,u) a  T.
+       Merge C(v) y C(u) en el conjunto
+   Return arbol T 
+\end{verbatim}
+
+
+Como sabemos el costo de buscar un AGM en un grafo, es de orden O(m*log(m)) siendo m la cantidad de aristas del grafo. Si tuviesemos una cantidad de aristas de orden F*C entonces esta idea seria adecuada para resolver el problema, vamos a mostrar un poco porque esto se adapta al problema y como es que cumplimos con la complejidad pedida.
+
+Como mencionamos anteriormente para armar el grafo necesitamos recorrer cada elemeto y ver como armar las aristas. El recorrer toda la grilla tiene un costo de O(F*C)
+y ademas por cada fila vamos a querer ir recorriendo las columnas para saber cuales son los vertices y el peso de la aristas que vamos a crear.
+En nuestro caso por como nos creamos las aristas, vamos a tener una por cada par de nodos.
+Supongamos el peor de los casos, tenemos una grilla la cual no tiene paredes(excepto las de los bordes) del siguiente estilo:
+
+\begin{verbatim}
+9 9
+#########
+#.......#
+#.......#
+#.......#
+#.......#
+#.......#
+#.......#
+#.......#
+#.......#
+#.......#
+#########
+\end{verbatim}
+Como sabemos que las salas no se pueden conectar en diagonal, entonces para representar estas conexiones, vamos a construirnos una arista por cada para de nodos. Teniendo esta idea, podemos deducir que a lo sumo dada una sala, esta podra unirse como maximo a otras cuatro salas.
+Haciendo un calculo un poco exagerado podemos decir que por cada sala de la grilla, tenemos como maximo 4 aristas en el peor de los casos, sabiendo que tenemos F*C salas en el peor de los casos, vamos a tener F*C*4 aristas para nuestro grafo, en orden de O, esto está incluido en O(F*C) aristas, por lo cual aplicando kruskal a un grafo generado de esta manera, la complejidad del calculo del AGM es del orden de F*C log (F*C), haciendo que nuestra solucion cumpla con la complejidad pedida.
+
+Luego, una vez construido el grafo, procedemos a aplicar el algoritmo de kruskal con la salvedad que no nos vamos a querer quedar con el arbol generador minimo, si no con la suma de ese arbol, ya que esto va a representar la forma de romper paredes menos costosas para poder recorrer todas las salas. Ya que si pensamos a las uniones de las salas como aristas de peso 0 y a las salas que estan separadas por una pared destructible como aristas de peso igual al costo de romper esa pared, entonces un arbol seria una forma de recorrer todas las salas y un arbol generador minimo es la forma de recorrer todas las salas con el menor costo de romper paredes, por lo tanto con la suma de sus pesos tendriamos la solucion a nuestro problema. 
+El problema con kruskal utilizado sin tener algo que nos permita calcular si una arista al agregarla a nuestra solucion parcial forma o no un ciclo en un tiempo razonable, en nuestro caso un tiempo razonable es logarítmico en la cantidad de aristas.
+
+Para realizar esta función hicimos uso de una estructura de datos que implemente el DisjoinSet
+\footnote{https://es.wikipedia.org/wiki/Estructura
+\_de\_datos\_para\_conjuntos\_disjuntos} la cual nos permite poder
+saber si una arista al momento de agregar a una componente conexa forma o no un ciclo en tiempo logarítmico.
+Esto se logra balanceando el árbol que representa cada componente conexa. Para ello, cada vértice esta asociada a una componente, al principio todos son de una distinta.
+A medida que vamos encontrando las aristas de peso mínimo, vamos a ir agregando los vértices de esas aristas a una misma componente, teniendo en cuenta que dichos vértices no pertenezcan a la misma componente a la cual estamos agregando ( lo que formaría un ciclo)
+Entonces, cuando agregamos esa arista, en nuestro conjunto nos vamos a ir guardando el padre de cada nodo, dicho padre va a ser el representante de estos vértices, los cuales vamos a utilizar para poder decir en que componente esta cada vértice.
+
+Esta técnica se llama unión por rank, consiste en siempre añadir el árbol más pequeño a la raíz del árbol más grande. Como la profundidad del árbol afecta el tiempo de ejecución del algoritmo, el árbol con menor profundidad es añadido a la raíz del árbol con mayor profundidad, el cual aumenta su profundidad solo si sus profundidades son iguales. 
+De esta forma vamos a poder tener un árbol balanceado, haciendo que las operaciones de busqueda sean de tiempo logarítmico.
+
+Por último, para chequear si nos quedó algo conexo recorremos cada vértice para ver que padres tienen. Esto cuesta O(cantidad de vértices), que es menor a O(F*C). Esto no suma a la complejidad total. 
+
+A continuación mostramos el pseudocódigo de esta estructura, con las operaciones de creado, busqueda y union de conjuntos.
+
+\begin{verbatim}
+ function CrearConjunto(x)
+     x.padre := x
+     x.rank  := 0
+ function Unión(x, y)
+     xRaíz := Buscar(x)
+     yRaíz := Buscar(y)
+     if xRaíz == yRaíz
+        return
+     //Ya que no están en el mismo conjunto, se unen.
+     if xRaíz.rank < yRaíz.rank
+        xRaíz.padre := yRaíz
+     else if xRaíz.rank > yRaíz.rank
+        yRaíz.padre := xRaíz
+     else
+        yRaíz.padre := xRaíz
+        xRaíz.rank := xRaíz.rank + 1
+\end{verbatim}
+
+Pseudocódigo con la reducción de caminos, la cual permite saber de forma eficiente el padre de cada vertice.
+\begin{verbatim}
+ function Buscar(x)
+     if x.padre != x
+        x.padre:= Buscar(x.padre)
+     return x.padre
+\end{verbatim}
+
+Pseudocódigo de la función que nos devuelve si lo que tenemos es conexo o no (podemos tener un bosque o un árbol).
+\begin{verbatim}
+ function Conexo()
+     if listaVertices.esVacia() return true;
+	
+     Vertice primero = listaVertices.Primero();
+     for vertice : listaVertices 
+         if Representante(primero) != Representante(aux) 
+             return false;
+     return true;
+	
+\end{verbatim}
+
+Por último, dentro del algoritmo de Kruskal en la parte en donde vamos sacando las aristas de menor peso, utilizamos un heap. Para esto hicimos uso el tipo \emph{PriorityQueue$<$Objeto$>$}:
+
+Solo hacemos uso de las funciones para crearlo, sacar el mínimo y encolar. Como está implementado con un heap, crearlo cuesta tiempo constante y sacar mínimo y encolar cuestan O(log(n))
+
+Lo cual cumple las complejidades mínimas que necesitamos para poder usarlo en nuestro problema. 
+
+Para destacar tenemos que mencionar como creamos el heap, en este caso lo hacemos de la siguiente manera :
+
+	\begin{lstlisting}
+	    	PriorityQueue<Arista> minHeap = new PriorityQueue<Arista>(M, comparator);
+			Iterator<Arista> it = aristasD.iterator();
+			while (it.hasNext()) { // O(m) voy agregando al heap.
+				minHeap.add(it.next()); // O(log(m))
+			}
+	\end{lstlisting}
+    
+    
+Para crearlo, necesitamos especificar el comparador que vamos a utilizar, como nosotros queremos los menores en peso, entonces nuestro comparador va a darle prioridad a los que tienen menor peso y con una cantidad máxima de ''cantidad de nodos'' :
+	\begin{lstlisting}
+		
+		Comparator<Arista> comparator = new Comparator<Arista>() {
+			@Override
+			public int compare(Arista A1, Arista A2) {
+				return A1.peso < A2.peso ? -1 : A1.peso == A2.peso ? 0 : 1; // compara por peso.
+			}
+		};
+	\end{lstlisting}
+
+\subsection{Compilación y ejecución}
+\begin{verbatim}
+Para compilar (debe estar en la carpeta /src/):
+javac -d soluciones/Ejercicio2.java ConjuntoComponentes.java
+
+Para ejecutar:
+java soluciones.Ejercicio2 archivoEntrada.in
+\end{verbatim}
+
+\subsection{Experimentación}
+
+\par A continuación vamos a realizar distintos experimentos sobre la implementación del algoritmo antes explicado. Generaremos casos de entradas con ciertas características para ver cómo influyen estos valores en los tiempos de ejecución del programa. Plantearemos las ideas de los experimentos y los resultados esperados. Luego, analizaremos los resultados obtenidos.
+
+\subsubsection{Experimento 1: Cantidad de columnas vs Tiempo de ejecución}
+
+\par Para el primer experimento nos enfocaremos en la complejidad del algoritmo utilizado. Variaremos la cantidad de columnas del mapa de entrada y veremos como afecta esto los tiempos de ejecución.
+
+\par Recordemos que la complejidad del algoritmo es O(F * C * log(F * C)), con C = \textit{cantidad de columnas del mapa de entrada} y F = \textit{cantidad de filas del mapa de entrada}. Vamos a generar mapas para utlizar como entrada del programa. Estos mapas van a tener una cantidad fija de filas: 7; mientras que la cantidad de columnas va a comenzar siendo 4 y la iremos aumentando hasta llegar a 3000. Al fijar el parámetro C, la complejidad nos queda en función, únicamente, de C: O(C * log(C)). Tomaremos los tiempos de ejecución del programa y esperamos que los tiempos de ejecución se mantengan por debajo de la cota nombrada.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{Problema2/img/exp1_columnas.png}
+  \caption{Resultados del experimento 1.}
+  \label{fig: ej1_exp1_columnas}
+\end{figure}
+
+\par Podemos observar en la figura \ref{fig: ej1_exp1_columnas} los resultados del experimento. Se dividió la entrada en dos tipo: sin paredes; con paredes (diversa cantidad). Esto se hizo para ver si había alguna diferencia o influencia de la cantidad de paredes en los tiempos de ejecución. Además, se agregaron dos funciones: una con complejidad O(n * log(n)) (la cota superior que nombramos en el párrafo anterior); y una con complejidad O(log(n)). Estas funciones nos sirven como parámetro de comparación.
+
+\par Podemos observar que el valor se mantiene muy por debajo de la cota superior. Esperábamos alguna diferencia mayor de los mapas sin paredes con respecto a los que tenían diversa cantidad de paredes, pero pudimos ver en los resultados que la diferencia no fue tan considerable. Esto se lo adjudicamos al hecho de que la lectura de la entrada y la carga de los distintos casilleros del mapa ya tiene un costo O(F*C), por lo que el hecho de que haya mas o menos paredes influye en un segundo nivel y sin mostrar notables cambios.
+
+
+\subsubsection{Experimento 2: Cantidad de filas vs Tiempos de ejecución}
+
+\par En este experimento vamos a hacer algo muy similar al experimento 1: vamos a fijar el parámetro C y variaremos el parámetro F haciéndolo aumentar desde 4 hasta 3000. Aquí también, al fijar C, modificamos la complejidad y nos queda O(C * log(C)). Esperamos entonces que los resultados de las corridas se correspondan con esta complejidad.
+
+\par Al igual que en experimento 1, vamos a diferenciar la entrada en dos tipos: sin paredes; y con una cantidad variada de paredes. Pero en este caso, al observar los resultados del primer experimento no esperamos mucha diferencia entre estos tipos. Con respecto a los tiempos de ejecución, esperamos algo análogo al experimento 1 (cambiando filas por columnas), porque un casillero depende de sus 4 vecinos (sin importar la orientación de ellos). Por esto, creemos que solo importa la cantidad total de casilleros.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{Problema2/img/exp2_filas.png}
+  \caption{Resultados del experimento 2.}
+  \label{fig: ej2_exp2_filas}
+\end{figure}
+
+\par En la figura \ref{fig: ej2_exp2_filas} podemos ver los resultados del experimento 2. Obtuvimos los resultados esperados, muy similares a los del experimento 1.
+
+\par Luego de los primeros dos experimentos notamos que la cota de complejidad detallada en la explicación del algoritmo (\textit{O(F*C * log(F*C))}) se cumple para ambos. Variar filas o columnas por separado nos da tiempos de ejecución muy por debajo de la cota. Lo que aún no hemos visto es si aumentar fuertemente los parámetros F y C (al mismo tiempo) respeta la cota. Nos enfocaremos en esto en el siguiente experimento.
+
+\subsubsection{Experimento 3: Cantidad de filas/columnas vs Tiempos de ejecución}
+
+\par Para este experimento, vamos a variar los parámetros F y C para ver que se cumpla la cota de complejidad establecida. Iremos aumentando los valores y esperamos que los tiempos de ejecución aumenten, pero manteniéndose por debajo de la cota establecida.
+
+\par Para llevar a cabo el experimento vamos a tomar un valor entero \textit{k}, y definiremos \textit{F=k} y \textit{C=k}. Vamos a ir aumentando el valor de \textit{k} para ver como influye esto en los tiempos de ejecución. Por definición $F*C=k^2$. Entonces la cota de complejidad expresada en función de \textit{k} nos queda O($k^2 * log(k^2)$).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{Problema2/img/exp3_filas_columnas.png}
+  \caption{Resultados del experimento 3.}
+  \label{fig: ej2_exp3_filas_columnas}
+\end{figure}
+
+\par En la figura \ref{fig: ej2_exp3_filas_columnas} podemos ver los resultados de correr el experimento 3 con mapas sin paredes y con mapas con una cantidad variada de mapas. También se graficó una función de orden $n^2 * log(n^2)$ para poder compararla.
+
+\par Podemos ver en el gráfico que los resultados obtenidos se encuentran en todo momento por debajo de la cota de complejidad. Es un resultado esperable, mas aún luego de lleva a cabo los experimentos 1 y 2.
+
+\subsubsection{Experimento 4: Cantidad de paredes vs Tiempos de ejecución}
+
+\par Hasta el momento, las paredes en el mapa de entrada solo fueron variadas para evitar que influyan en los tiempos de ejecución. En el siguiente experimento, veremos de qué manera influye la cantidad de paredes en el mapa de entrada. A pesar de que no estén contemplados como factores influyentes en la cota de complejidad del algoritmo, queremos ver si tienen algún tipo de influencia menor. En principio, creemos que una pared afecta positívamente sobre los tiempos de ejecución (disminuyéndolo). Al modelar el problema, una pared no implica un nodo y aristas a sus vecinos (como si lo hace un casillero normal), sino que solo genera un par de aristas que unen a sus vecinos. Si tenemos en cuenta que la complejidad depende de la cantidad de nodos en el grafo del problema modelado (acotados por las filas y columnas de la entrada), podemos esperar que cuantas mas paredes haya, menos tardará el programa en resolver el problema.
+
+\par Para llevar a cabo el experimento fijaremos el tamaño el mapa (F=70, C=70) y aumentaremos la cantidad de paredes, partiendo de ninguna pared, hasta llegar a un máximo de 900 paredes. Tomaremos el tiempo de ejecución del programa en cada caso y analizaremos los resultados.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{Problema2/img/exp4_paredes.png}
+  \caption{Resultados del experimento 4.}
+  \label{fig: ej2_exp4_paredes}
+\end{figure}
+
+\par En la figura \ref{fig: ej2_exp4_paredes} están representados los resultados obtenidos del experimento. Podemos observar que a medida que la cantidad de paredes aumenta dismuye la complejidad. Pero esta diferencia es menor y no vemos que afecte fuértemente la complejidad del algoritmo. Esperábamos que la diferencia sea mayor y que pudiéramos tomarlo como un factor relevante (aunque sea levemente) en los tiempos de ejecución, pero no es así.
+
+\subsubsection{Experimento 5: Cantidad de salas vs Tiempos de ejecución}
+
+\par En este último experimento queremos ver cómo afecta a la complejidad la cantidad de salas en el mapa de entrada. Para esto, vamos a generar mapas de entrada con paredes que ocupen todo el alto y dividan al mapa en diversas salas verticales. De esta manera correremos el algoritmo sobre mapas generados con 10 filas, 200 columnas y distintas cantidades de salas y veremos si este factor influye en la complejidad y de qué manera.
+
+\par Creemos que no se verán grandes cambios en los tiempos de ejecución, debido a que simplemente son paredes y, cómo vimos en el experimento 3, no es un factor que influya fuértemente en la complejidad.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{Problema2/img/exp5_salas.png}
+  \caption{Resultados del experimento 4.}
+  \label{fig: ej2_exp5_salas}
+\end{figure}
+
+\par Luego de correr el experimento pudimos notar que los tiempos de ejecución fueron prácticamente constantes. Se pueden observar los resultados en la figura \ref{fig: ej2_exp5_salas}. Finalmente, la cantidad de salas es un factor que no influye de forma notoria en los tiempos de ejecución.
+\\
+\\
+\par Para concluir, pudimos ver que los tiempos de ejecución del programa están diréctamente relacionados con la cantidad de casilleros (indistíntamente de la cantidad de filas y columnas). El resto de las variables de la entrada no tienen un papel importante a la hora de medir tiempos. También pudimos ver que en la práctica la cota de complejidad queda lejana y se respeta groseramente.

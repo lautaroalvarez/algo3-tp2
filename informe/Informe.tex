@@ -1,0 +1,91 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc} % para poder usar tildes en archivos UTF-8
+\usepackage[spanish]{babel} % para que comandos como \today den el resultado en castellano
+\usepackage{a4wide} % márgenes un poco más anchos que lo usual
+\usepackage[conEntregas]{Sty/caratula}
+\usepackage{Sty/mathtools}
+\usepackage{Sty/float}
+\usepackage[pdftex]{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage[ruled,vlined,linesnumbered]{Sty/algorithm2e}
+%Esto de abajo es para encabezado y pie de pagina
+\usepackage{Sty/lastpage}
+\usepackage{fancyhdr}
+\usepackage{amsfonts}
+\usepackage[noend]{algpseudocode}
+\usepackage{enumerate} % AGREGO PARA PODER ENUMERAR LAS LINEAS DEL ALGORITMO
+\usepackage{wrapfig}
+\usepackage{amsmath}
+\usepackage{verbatim}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{dsfont}
+\usepackage{listingsutf8}
+
+\usepackage[table]{xcolor}
+\usepackage{placeins}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{frame=tb,
+  language=Java,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3
+}
+
+\pagestyle{fancy}
+
+
+\cfoot{\thepage /\pageref{LastPage} }
+
+
+\begin{document}
+
+\fecha{\today}
+\materia{Algoritmos y estructuras de datos III}
+\titulo{Trabajo Práctico II}
+
+\integrante{Cristian Gast\'on L\'opez}{515/08}{kakoseguro@hotmail.com}
+\integrante{Fabio Seminara}{375/12}{faseminara@hotmail.com}
+\integrante{Mat\'ias Millass\'on}{131/13}{matiasmillasson@gmail.com}
+\integrante{Lautaro Leonel Alvarez}{268/14}{lautarolalvarez@gmail.com}
+
+\maketitle
+\newpage
+\tableofcontents	
+\newpage
+\section{Problema 1: Laberinto}
+\input{Problema1/problema1.tex}
+
+\newpage
+\section{Problema 2: Juntando piezas}
+\input{Problema2/problema2.tex}
+
+\newpage
+\section{Problema 3: Escapando}
+\input{Problema3/problema3.tex}
+
+\newpage
+\section{Anexo con el c\'odigo}
+\input{Anexo/anexo.tex}
+
+\newpage
+\section{Bibliograf\'ia}
+
+[1] Cormen, Thomas H, Charles Eric Leiserson, and Ronald L Rivest. Introduction To Algorithms. Cambridge, Mass.: MIT Press, 1990. Print. pp 658-662.
+\end{document}
+
